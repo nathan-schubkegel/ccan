@@ -25,7 +25,7 @@
 #include <assert.h>
 
 
-bool utf8_validate(const char *str, size_t length)
+int utf8_validate(const char *str, size_t length)
 {
 	const char *s = str;
 	const char *e = str + length;
@@ -34,11 +34,11 @@ bool utf8_validate(const char *str, size_t length)
 	for (; s < e; s += len) {
 		len = utf8_validate_char(s, e);
 		if (len == 0)
-			return false;
+			return 0; // false
 	}
 	assert(s == e);
 	
-	return true;
+	return 1; // true
 }
 
 /*
@@ -121,7 +121,7 @@ int utf8_validate_char(const char *s, const char *e)
 	}
 }
 
-int utf8_read_char(const char *s, uchar_t *out)
+int utf8_read_char(const char *s, Utf32Char *out)
 {
 	const unsigned char *c = (const unsigned char*) s;
 
@@ -131,53 +131,53 @@ int utf8_read_char(const char *s, uchar_t *out)
 		return 1;
 	} else if (c[0] <= 0xDF) {
 		/* C2..DF (unless input is invalid) */
-		*out = ((uchar_t)c[0] & 0x1F) << 6 |
-		       ((uchar_t)c[1] & 0x3F);
+		*out = ((Utf32Char)c[0] & 0x1F) << 6 |
+		       ((Utf32Char)c[1] & 0x3F);
 		return 2;
 	} else if (c[0] <= 0xEF) {
 		/* E0..EF */
-		*out = ((uchar_t)c[0] &  0xF) << 12 |
-		       ((uchar_t)c[1] & 0x3F) << 6  |
-		       ((uchar_t)c[2] & 0x3F);
+		*out = ((Utf32Char)c[0] &  0xF) << 12 |
+		       ((Utf32Char)c[1] & 0x3F) << 6  |
+		       ((Utf32Char)c[2] & 0x3F);
 		return 3;
 	} else {
 		/* F0..F4 (unless input is invalid) */
-		*out = ((uchar_t)c[0] &  0x7) << 18 |
-		       ((uchar_t)c[1] & 0x3F) << 12 |
-		       ((uchar_t)c[2] & 0x3F) << 6  |
-		       ((uchar_t)c[3] & 0x3F);
+		*out = ((Utf32Char)c[0] &  0x7) << 18 |
+		       ((Utf32Char)c[1] & 0x3F) << 12 |
+		       ((Utf32Char)c[2] & 0x3F) << 6  |
+		       ((Utf32Char)c[3] & 0x3F);
 		return 4;
 	}
 }
 
-int utf8_write_char(uchar_t unicode, char *out)
+int utf8_write_char(Utf32Char unicode, char *out)
 {
 	unsigned char *o = (unsigned char*) out;
 
 	if (unicode <= 0x7F) {
 		/* U+0000..U+007F */
-		*o++ = unicode;
+		*o++ = (unsigned char)unicode;
 		return 1;
 	} else if (unicode <= 0x7FF) {
 		/* U+0080..U+07FF */
-		*o++ = 0xC0 | unicode >> 6;
-		*o++ = 0x80 | (unicode & 0x3F);
+		*o++ = (unsigned char)(0xC0 | unicode >> 6);
+		*o++ = (unsigned char)(0x80 | (unicode & 0x3F));
 		return 2;
 	} else if (unicode <= 0xFFFF) {
 		/* U+0800..U+FFFF */
 		if (unicode >= 0xD800 && unicode <= 0xDFFF)
 			unicode = REPLACEMENT_CHARACTER;
 	three_byte_character:
-		*o++ = 0xE0 | unicode >> 12;
-		*o++ = 0x80 | (unicode >> 6 & 0x3F);
-		*o++ = 0x80 | (unicode & 0x3F);
+		*o++ = (unsigned char)(0xE0 | unicode >> 12);
+		*o++ = (unsigned char)(0x80 | (unicode >> 6 & 0x3F));
+		*o++ = (unsigned char)(0x80 | (unicode & 0x3F));
 		return 3;
 	} else if (unicode <= 0x10FFFF) {
 		/* U+10000..U+10FFFF */
-		*o++ = 0xF0 | unicode >> 18;
-		*o++ = 0x80 | (unicode >> 12 & 0x3F);
-		*o++ = 0x80 | (unicode >> 6 & 0x3F);
-		*o++ = 0x80 | (unicode & 0x3F);
+		*o++ = (unsigned char)(0xF0 | unicode >> 18);
+		*o++ = (unsigned char)(0x80 | (unicode >> 12 & 0x3F));
+		*o++ = (unsigned char)(0x80 | (unicode >> 6 & 0x3F));
+		*o++ = (unsigned char)(0x80 | (unicode & 0x3F));
 		return 4;
 	} else {
 		/* U+110000... */
@@ -186,23 +186,23 @@ int utf8_write_char(uchar_t unicode, char *out)
 	}
 }
 
-uchar_t from_surrogate_pair(unsigned int uc, unsigned int lc)
+Utf32Char from_surrogate_pair(unsigned int uc, unsigned int lc)
 {
 	if (uc >= 0xD800 && uc <= 0xDBFF && lc >= 0xDC00 && lc <= 0xDFFF)
-		return 0x10000 + ((((uchar_t)uc & 0x3FF) << 10) | (lc & 0x3FF));
+		return 0x10000 + ((((Utf32Char)uc & 0x3FF) << 10) | (lc & 0x3FF));
 	else
 		return REPLACEMENT_CHARACTER;
 }
 
-bool to_surrogate_pair(uchar_t unicode, unsigned int *uc, unsigned int *lc)
+int to_surrogate_pair(Utf32Char unicode, unsigned int *uc, unsigned int *lc)
 {
 	if (unicode >= 0x10000 && unicode <= 0x10FFFF) {
-		uchar_t n = unicode - 0x10000;
+		Utf32Char n = unicode - 0x10000;
 		*uc = ((n >> 10) & 0x3FF) | 0xD800;
 		*lc = (n & 0x3FF) | 0xDC00;
-		return true;
+		return 1; // true
 	} else {
 		*uc = *lc = REPLACEMENT_CHARACTER;
-		return false;
+		return 0; // false
 	}
 }

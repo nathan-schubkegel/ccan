@@ -24,9 +24,7 @@
 #ifndef CCAN_CHARSET_H
 #define CCAN_CHARSET_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <SDL.h>
 
 #define REPLACEMENT_CHARACTER 0xFFFD
 
@@ -34,13 +32,14 @@
  * Type for Unicode codepoints.
  * We need our own because wchar_t might be 16 bits.
  */
-typedef uint32_t uchar_t;
+typedef Uint32 Utf32Char;
 
 /*
  * Validate the given UTF-8 string.
  * If it contains '\0' characters, it is still valid.
+ * Returns true/false
  */
-bool utf8_validate(const char *str, size_t length);
+int utf8_validate(const char *str, size_t length);
 
 /*
  * Validate a single UTF-8 character.
@@ -59,7 +58,7 @@ int utf8_validate_char(const char *s, const char *e);
  * This function assumes input is valid UTF-8,
  * and that there are enough characters in front of @s.
  */
-int utf8_read_char(const char *s, uchar_t *out);
+int utf8_read_char(const char *s, Utf32Char *out);
 
 /*
  * Write a single UTF-8 character to @s,
@@ -70,7 +69,7 @@ int utf8_read_char(const char *s, uchar_t *out);
  *
  * This function will write up to 4 bytes to @out.
  */
-int utf8_write_char(uchar_t unicode, char *out);
+int utf8_write_char(Utf32Char unicode, char *out);
 
 /*
  * Compute the Unicode codepoint of a UTF-16 surrogate pair.
@@ -78,7 +77,7 @@ int utf8_write_char(uchar_t unicode, char *out);
  * @uc should be 0xD800..0xDBFF, and @lc should be 0xDC00..0xDFFF.
  * If they aren't, this function returns REPLACEMENT_CHARACTER.
  */
-uchar_t from_surrogate_pair(unsigned int uc, unsigned int lc);
+Utf32Char from_surrogate_pair(unsigned int uc, unsigned int lc);
 
 /*
  * Construct a UTF-16 surrogate pair given a Unicode codepoint.
@@ -86,7 +85,8 @@ uchar_t from_surrogate_pair(unsigned int uc, unsigned int lc);
  * @unicode should be U+10000..U+10FFFF.
  * If it's not, this function returns false,
  * and sets *uc and *lc to REPLACEMENT_CHARACTER.
+ * Returns true/false
  */
-bool to_surrogate_pair(uchar_t unicode, unsigned int *uc, unsigned int *lc);
+int to_surrogate_pair(Utf32Char unicode, unsigned int *uc, unsigned int *lc);
 
 #endif

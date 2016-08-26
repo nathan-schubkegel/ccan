@@ -20,3 +20,18 @@ tools/_infotojson/infotojson
 tools/ccanlint/test/run-file_analysis
 tools/configurator/configurator
 scores/
+
+#ignore vim backup files
+*~
+#ignore visual studio files
+*.user
+*.suo
+*.ncb
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+#ignore winmerge backup files
+*.bak
+#TODO: what's this?
+*.aps

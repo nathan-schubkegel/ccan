@@ -35,3 +35,8 @@ scores/
 *.bak
 #TODO: what's this?
 *.aps
+#ignore cmake auto-generated stuff
+CMakeFiles/
+/Makefile
+/CMakeCache.txt
+/cmake_install.cmake

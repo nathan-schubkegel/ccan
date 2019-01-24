@@ -186,7 +186,7 @@ int utf8_write_char(Utf32Char unicode, char *out)
 	}
 }
 
-Utf32Char from_surrogate_pair(unsigned int uc, unsigned int lc)
+Utf32Char utf32_from_utf16_surrogate_pair(unsigned int uc, unsigned int lc)
 {
 	if (uc >= 0xD800 && uc <= 0xDBFF && lc >= 0xDC00 && lc <= 0xDFFF)
 		return 0x10000 + ((((Utf32Char)uc & 0x3FF) << 10) | (lc & 0x3FF));
@@ -194,7 +194,7 @@ Utf32Char from_surrogate_pair(unsigned int uc, unsigned int lc)
 		return REPLACEMENT_CHARACTER;
 }
 
-int to_surrogate_pair(Utf32Char unicode, unsigned int *uc, unsigned int *lc)
+int utf32_to_utf16_surrogate_pair(Utf32Char unicode, unsigned int *uc, unsigned int *lc)
 {
 	if (unicode >= 0x10000 && unicode <= 0x10FFFF) {
 		Utf32Char n = unicode - 0x10000;

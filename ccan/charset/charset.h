@@ -77,7 +77,7 @@ int utf8_write_char(Utf32Char unicode, char *out);
  * @uc should be 0xD800..0xDBFF, and @lc should be 0xDC00..0xDFFF.
  * If they aren't, this function returns REPLACEMENT_CHARACTER.
  */
-Utf32Char from_surrogate_pair(unsigned int uc, unsigned int lc);
+Utf32Char utf32_from_utf16_surrogate_pair(unsigned int uc, unsigned int lc);
 
 /*
  * Construct a UTF-16 surrogate pair given a Unicode codepoint.
@@ -87,6 +87,6 @@ Utf32Char from_surrogate_pair(unsigned int uc, unsigned int lc);
  * and sets *uc and *lc to REPLACEMENT_CHARACTER.
  * Returns true/false
  */
-int to_surrogate_pair(Utf32Char unicode, unsigned int *uc, unsigned int *lc);
+int utf32_to_utf16_surrogate_pair(Utf32Char unicode, unsigned int *uc, unsigned int *lc);
 
 #endif

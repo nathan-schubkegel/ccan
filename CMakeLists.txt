@@ -5,5 +5,5 @@ include_directories("../sdl/include")
 
 file(GLOB sources "ccan/charset/*.c")
  
-add_library(ccan ${sources})
+add_library(ccan STATIC ${sources})
 
